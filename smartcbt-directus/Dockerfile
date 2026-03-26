@@ -12,13 +12,9 @@ RUN corepack enable && corepack prepare pnpm@8.5.1 --activate
 
 USER node
 
-# Clean up existing node_modules and lockfiles to allow pnpm to manage everything cleanly
-# This prevents conflicts between the base image's npm state and our pnpm install
-RUN rm -rf node_modules pnpm-lock.yaml
-
 # CRITICAL: Use --shamefully-hoist to create a flat node_modules structure.
 # Directus and its native modules (like argon2) expect this layout to find their binaries.
-RUN pnpm install --shamefully-hoist \
+RUN pnpm add --shamefully-hoist \
     moment uuid \
     @bicou/directus-extension-tiptap \
     directus-extension-computed-interface \
