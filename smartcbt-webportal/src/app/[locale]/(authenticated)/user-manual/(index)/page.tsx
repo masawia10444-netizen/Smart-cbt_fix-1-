@@ -24,9 +24,10 @@ export default async function UserManualPage() {
   // New logic: Filter for MToken and push CBT conditionally
   if (isMTokenSession) {
     // Only show Carbon Footprint and Travel Mart manuals
+    // Exclude "โครงสร้างสไลด์..." manual
     manuals = manuals.filter(m => 
-      m.application_code === "CARBON" || 
-      m.application_code === "BUSINESS"
+      (m.application_code === "CARBON" || m.application_code === "BUSINESS") &&
+      !m.title?.includes("โครงสร้างสไลด์")
     );
   } else {
     // Show original set + CBT Thailand

@@ -32,7 +32,7 @@ const UserManual = (props: UserManualProps) => {
   };
 
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-20 px-10 py-20 md:px-4 md:py-32">
+    <div className="flex h-full flex-col items-center justify-center gap-20 px-10 pt-32 pb-20 md:px-4 md:py-32">
       <h1 className="text-5xl font-semibold text-smart-cbt-dark-green drop-shadow-lg md:text-5xl">
         {t("userManual.title")}
       </h1>
