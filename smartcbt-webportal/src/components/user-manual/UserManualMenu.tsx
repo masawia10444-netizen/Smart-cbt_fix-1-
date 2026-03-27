@@ -46,8 +46,11 @@ const UserManualMenu: React.FC<UserManualMenuProps> = ({
             objectFit: "contain",
           }}
         />
-        <div className="flex flex-col gap-4">
-          <span className="grow whitespace-pre-line text-md font-medium">{title}</span>
+        <div className="flex flex-col justify-center gap-2 md:gap-4">
+          <span className="grow whitespace-pre-line text-md font-medium">
+            {/* Logic: Prefix with 'คู่มือ' if missing and not CBT */}
+            {title.includes("CBT") || title.startsWith("คู่มือ") ? title : `คู่มือ ${title}`}
+          </span>
           {updatedAt && (
             <span>
               {t("global.updatedAt")}:{" "}
