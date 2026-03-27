@@ -64,7 +64,7 @@ const WebPortal = () => {
             <NextLink
               href={"https://cbtthailand.dasta.or.th/"}
               intent={"primaryButton"}
-              target="_blank"
+              // target="_blank"
               className="flex h-auto w-full items-center justify-center p-4 py-2"
             >
               {t("webPortal.cbtThailand.button")}

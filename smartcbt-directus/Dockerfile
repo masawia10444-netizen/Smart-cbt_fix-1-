@@ -12,6 +12,11 @@ RUN corepack enable && corepack prepare pnpm@8.5.1 --activate
 
 USER node
 
+# FIX: Previous version deleted node_modules which broke native binaries (argon2)
+# Original code (commented out for history):
+# RUN rm -rf node_modules
+# RUN pnpm install --shamefully-hoist
+
 # CRITICAL: Use --shamefully-hoist to create a flat node_modules structure.
 # Directus and its native modules (like argon2) expect this layout to find their binaries.
 RUN pnpm add --shamefully-hoist \

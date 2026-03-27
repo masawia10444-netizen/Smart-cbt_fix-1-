@@ -31,7 +31,8 @@ const UserManualMenu: React.FC<UserManualMenuProps> = ({
     <Link className={disabled ? "pointer-events-none" : ""} href={href ?? ""} aria-disabled={disabled}>
       <div
         className={cn(
-          "flex h-[200px] flex-row items-center gap-7 rounded-2xl bg-white p-8 drop-shadow-xl hover:cursor-pointer",
+          // "flex h-[200px] flex-row items-center gap-7 rounded-2xl bg-white p-8 drop-shadow-xl hover:cursor-pointer", // Original
+          "flex min-h-[140px] h-auto flex-row items-center gap-7 rounded-2xl bg-white p-6 md:p-8 drop-shadow-xl hover:cursor-pointer",
           disabled && "bg-smart-cbt-very-light-grey hover:cursor-not-allowed",
           className
         )}

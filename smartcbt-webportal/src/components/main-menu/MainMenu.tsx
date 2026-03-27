@@ -32,8 +32,10 @@ const MainMenu = ({ isMTokenSession }: MainMenuProps) => {
 
   useEffect(() => {
     let menus: MainMenusType[] = [];
+    
+    // Original Logic (preserved as comment)
+    /*
     menus.push(cbtThailandMenu);
-
     setMainMenus(menus);
     if (appCodes?.includes("CARBON")) {
       menus.push(carbonFootprintMenu);
@@ -41,8 +43,6 @@ const MainMenu = ({ isMTokenSession }: MainMenuProps) => {
     if (appCodes?.includes("BUSINESS")) {
       menus.push(travelMartMenu);
     }
-    
-    // Hide these menus if logged in via mToken
     if (!isMTokenSession) {
       if (appCodes?.includes("PHOTO")) {
         menus.push(photoBankMenu);
@@ -54,7 +54,39 @@ const MainMenu = ({ isMTokenSession }: MainMenuProps) => {
         menus.push(siaSroiMenu);
       }
     }
-  }, []);
+    */
+
+    // New Logic for MToken Filtering
+    if (isMTokenSession) {
+      // For MToken session, show ONLY Carbon and Travel Mart
+      if (appCodes?.includes("CARBON")) {
+        menus.push(carbonFootprintMenu);
+      }
+      if (appCodes?.includes("BUSINESS")) {
+        menus.push(travelMartMenu);
+      }
+    } else {
+      // Default Logic for standard sessions
+      menus.push(cbtThailandMenu);
+      if (appCodes?.includes("CARBON")) {
+        menus.push(carbonFootprintMenu);
+      }
+      if (appCodes?.includes("BUSINESS")) {
+        menus.push(travelMartMenu);
+      }
+      if (appCodes?.includes("PHOTO")) {
+        menus.push(photoBankMenu);
+      }
+      if (appCodes?.includes("APM")) {
+        menus.push(apiMenu);
+      }
+      if (appCodes?.includes("SIA/SROI")) {
+        menus.push(siaSroiMenu);
+      }
+    }
+    
+    setMainMenus(menus);
+  }, [appCodes, isMTokenSession]); // Added dependencies for reliability
 
   return (
     <div className="px-10 py-20 md:px-4 md:py-32">
