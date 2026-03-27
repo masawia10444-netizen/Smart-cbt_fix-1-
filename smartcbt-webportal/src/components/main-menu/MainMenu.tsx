@@ -31,34 +31,15 @@ const MainMenu = ({ isMTokenSession }: MainMenuProps) => {
   const appCodes = roles?.map((r) => r.app_code);
 
   useEffect(() => {
-    let menus: MainMenusType[] = [];
-    
-    // Original Logic (preserved as comment)
-    /*
-    menus.push(cbtThailandMenu);
-    setMainMenus(menus);
-    if (appCodes?.includes("CARBON")) {
-      menus.push(carbonFootprintMenu);
-    }
-    if (appCodes?.includes("BUSINESS")) {
-      menus.push(travelMartMenu);
-    }
-    if (!isMTokenSession) {
-      if (appCodes?.includes("PHOTO")) {
-        menus.push(photoBankMenu);
-      }
-      if (appCodes?.includes("APM")) {
-        menus.push(apiMenu);
-      }
-      if (appCodes?.includes("SIA/SROI")) {
-        menus.push(siaSroiMenu);
-      }
-    }
-    */
+    // 1. Wait for roles to load to avoid flickering or empty menus
+    // If session is undefined, we are still loading
+    if (!session || !user || !roles) return;
 
-    // New Logic for MToken Filtering
+    let menus: MainMenusType[] = [];
+
+    // NEW LOGIC: Filter based on isMTokenSession
     if (isMTokenSession) {
-      // For MToken session, show ONLY Carbon and Travel Mart
+      // ONLY Carbon Footprint and Travel Mart for MToken
       if (appCodes?.includes("CARBON")) {
         menus.push(carbonFootprintMenu);
       }
@@ -84,9 +65,9 @@ const MainMenu = ({ isMTokenSession }: MainMenuProps) => {
         menus.push(siaSroiMenu);
       }
     }
-    
+
     setMainMenus(menus);
-  }, [appCodes, isMTokenSession]); // Added dependencies for reliability
+  }, [session, isMTokenSession]); // Use session as a stable dependency instead of new arrays
 
   return (
     <div className="px-10 py-20 md:px-4 md:py-32">
