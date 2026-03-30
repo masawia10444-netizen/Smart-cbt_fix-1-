@@ -96,10 +96,10 @@ const CarbonFootprintOverview = () => {
   if (isLoading) return <LoadingSpinner />;
   else
     return (
-      <div className="relative h-full min-h-full">
-        <div className="flex lg:h-full flex-col gap-4">
-          <div className="flex flex-col md:flex-row justify-between gap-4 shrink-0">
-            <h1 className="text-2xl font-medium text-smart-cbt-dark-green shrink-0">{t("carbon.carbonFootprint")}</h1>
+      <div className="relative h-full">
+        <div className="flex h-full flex-col gap-4">
+          <div className="flex justify-between">
+            <h1 className="text-2xl font-medium text-smart-cbt-dark-green">{t("carbon.carbonFootprint")}</h1>
             <NextLink
               intent="primarySimple"
               icon={<IconParkOutlineSettingConfig />}
@@ -108,55 +108,59 @@ const CarbonFootprintOverview = () => {
               {t("carbon.viewAllProjectInformation")}
             </NextLink>
           </div>
-          <div className="flex flex-col lg:flex-row lg:h-full gap-6 px-0 md:px-0">
-            <div className="flex w-full lg:w-[342px] flex-col gap-6 shrink-0 lg:shrink">
-              <CarbonFootprintOverviewCard className="flex flex-col items-end gap-6 px-6 font-medium shrink-0 lg:shrink">
-                <p className=" text-smart-cbt-medium-grey">{t("carbon.overview.totalFootprint")}</p>
-                <p className="text-3xl text-smart-cbt-green">{summaryCarbonData?.totalCarbon.toFixed(4)} kgCO2eq</p>
-              </CarbonFootprintOverviewCard>
-              <CarbonFootprintOverviewCard className="flex w-full min-h-[400px] lg:h-full lg:flex-grow flex-col items-end gap-6 overflow-hidden p-0">
-                <CarbonFootprintMap groupMapCarbon={groupMapCarbonData ?? []} />
-              </CarbonFootprintOverviewCard>
-            </div>
-            <div className="flex flex-grow flex-col gap-6 overflow-hidden shrink-0 lg:shrink">
-              <div className="flex flex-col lg:flex-row flex-1 gap-6 shrink-0 lg:shrink">
-                <CarbonFootprintOverviewCard className="flex-grow w-full overflow-hidden">
-                  <CarbonFootprintNationalLevelGraph
-                    type={filterType}
-                    tableCarbon={tableCarbonData ?? []}
-                    isLoading={isLoading}
-                    onOpenFilterPopup={() => setShowFilterPopup(true)}
-                  />
+          <div className="flex h-full flex-col gap-6 overflow-y-auto lg:overflow-visible">
+            <div className="flex flex-col lg:flex-row gap-6">
+              <div className="flex w-full lg:w-[342px] flex-col gap-6">
+                <CarbonFootprintOverviewCard className="flex flex-col items-end gap-6 px-6 font-medium">
+                  <p className=" text-smart-cbt-medium-grey">{t("carbon.overview.totalFootprint")}</p>
+                  <p className="text-2xl text-smart-cbt-green md:text-3xl">
+                    {summaryCarbonData?.totalCarbon.toFixed(4)} kgCO2eq
+                  </p>
                 </CarbonFootprintOverviewCard>
-                <CarbonFootprintOverviewCard className="flex w-full min-h-[300px] lg:w-[342px] overflow-hidden">
-                  <CarbonFootprintSummaryGraph pieChartCarbon={pieChartCarbonData} />
+                <CarbonFootprintOverviewCard className="flex-grow overflow-hidden p-0 h-[400px]">
+                  <CarbonFootprintMap groupMapCarbon={groupMapCarbonData ?? []} />
                 </CarbonFootprintOverviewCard>
               </div>
-              <CarbonFootprintOverviewCard className="flex-1 w-full overflow-hidden">
-                <CarbonFootprintRegionalGraphContainer
-                  type={filterType}
-                  tableCarbonByRegion={tableCarbonByRegionData}
-                  forceRefreshKey={forceRefreshKey}
-                />
-              </CarbonFootprintOverviewCard>
+              <div className="flex flex-grow flex-col gap-6 ">
+                <div className="flex flex-col lg:flex-row gap-6">
+                  <CarbonFootprintOverviewCard className="flex-grow min-h-[400px]">
+                    <CarbonFootprintNationalLevelGraph
+                      type={filterType}
+                      tableCarbon={tableCarbonData ?? []}
+                      isLoading={isLoading}
+                      onOpenFilterPopup={() => setShowFilterPopup(true)}
+                    />
+                  </CarbonFootprintOverviewCard>
+                  <CarbonFootprintOverviewCard className="flex w-full lg:w-[342px] min-h-[400px]">
+                    <CarbonFootprintSummaryGraph pieChartCarbon={pieChartCarbonData} />
+                  </CarbonFootprintOverviewCard>
+                </div>
+                <CarbonFootprintOverviewCard className="min-h-[400px]">
+                  <CarbonFootprintRegionalGraphContainer
+                    type={filterType}
+                    tableCarbonByRegion={tableCarbonByRegionData}
+                    forceRefreshKey={forceRefreshKey}
+                  />
+                </CarbonFootprintOverviewCard>
+              </div>
             </div>
           </div>
-          {showFilterPopup && filterStartDate && filterEndDate && (
-            <CarbonFootprintFilterPopup
-              isOpen={showFilterPopup}
-              initialStartDate={filterStartDate}
-              initialEndDate={filterEndDate}
-              type={filterType}
-              onClose={setShowFilterPopup}
-              onDateRangeSelected={(startDate: Date, endDate: Date, type: FilterType) => {
-                setFilterStartDate(startDate);
-                setFilterEndDate(endDate);
-                setFilterType(type);
-                setShowFilterPopup(false);
-              }}
-            />
-          )}
         </div>
+        {showFilterPopup && filterStartDate && filterEndDate && (
+          <CarbonFootprintFilterPopup
+            isOpen={showFilterPopup}
+            initialStartDate={filterStartDate}
+            initialEndDate={filterEndDate}
+            type={filterType}
+            onClose={setShowFilterPopup}
+            onDateRangeSelected={(startDate: Date, endDate: Date, type: FilterType) => {
+              setFilterStartDate(startDate);
+              setFilterEndDate(endDate);
+              setFilterType(type);
+              setShowFilterPopup(false);
+            }}
+          />
+        )}
       </div>
     );
 };

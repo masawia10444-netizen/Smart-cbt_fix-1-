@@ -51,7 +51,7 @@ const CarbonFootprintGraphSummary = (props: FootprintDashboardCalculationResultW
       {/* Chart Area */}
       <div className="relative -my-6 sm:-my-14 w-full h-[280px] sm:h-[350px] flex justify-center">
         <div className="w-full max-w-[300px] sm:max-w-[350px]">
-           <PolarArea options={data.options} data={data.data} plugins={ShadowPlugin} />
+          <PolarArea options={data.options} data={data.data} plugins={ShadowPlugin} />
         </div>
       </div>
 

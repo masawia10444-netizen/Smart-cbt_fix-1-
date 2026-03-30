@@ -197,9 +197,10 @@ const TravelMartMain = ({ profile }: TravelMartMainProps) => {
               <div className="absolute left-5 right-5 top-1/2 z-20 -translate-y-1/2 text-white md:container md:left-1/2 md:mx-auto md:-translate-x-1/2">
                 <div className="flex flex-col items-center gap-4 text-white md:gap-6 lg:gap-10">
                   <h1 className="text-4xl font-semibold drop-shadow-md lg:text-7xl"> {t("travelMart.main.title")}</h1>
-                  <form onSubmit={onSubmit}>
-                    <div className="flex w-full flex-col flex-wrap items-center justify-center gap-6 lg:flex-row lg:gap-3 lg:pt-10 ">
-                      <div className="w-full flex-1 md:w-full md:flex-none">
+                  <form onSubmit={onSubmit} className="w-full">
+                    <div className="flex w-full flex-col items-stretch justify-center gap-4 lg:pt-10">
+                      {/* Row 1: Search Name */}
+                      <div className="w-full">
                         <FormSimpleSearchInput
                           control={control}
                           name="q"
@@ -207,9 +208,10 @@ const TravelMartMain = ({ profile }: TravelMartMainProps) => {
                           showClearButton
                         />
                       </div>
-                      <div className="grid flex-1 grid-cols-2 flex-wrap justify-center gap-4 md:w-full md:flex-none md:grid-cols-12">
+                      {/* Row 2: Filters */}
+                      <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-3">
                         <FormDropdown
-                          className="col-span-4 w-full"
+                          className="w-full"
                           buttonClassName="w-full"
                           control={control}
                           name="regions"
@@ -224,7 +226,7 @@ const TravelMartMain = ({ profile }: TravelMartMainProps) => {
                           nullDisplay={"-"}
                         />
                         <FormDropdown
-                          className="col-span-3 w-full"
+                          className="w-full"
                           buttonClassName="w-full"
                           control={control}
                           name="province"
@@ -245,7 +247,7 @@ const TravelMartMain = ({ profile }: TravelMartMainProps) => {
                           nullDisplay={"-"}
                         />
                         <FormDropdown
-                          className="col-span-3 w-full"
+                          className="w-full"
                           buttonClassName="w-full"
                           control={control}
                           name="typeEvent"
@@ -259,10 +261,13 @@ const TravelMartMain = ({ profile }: TravelMartMainProps) => {
                           nullDisplay={"-"}
                           fixed={false}
                         />
+                      </div>
+                      {/* Row 3: Search Button */}
+                      <div className="flex w-full justify-center mt-2">
                         <Button
                           intent={"primary"}
                           type="submit"
-                          className="col-span-2 h-auto w-full rounded-full p-0 sm:min-w-full"
+                          className="h-[48px] w-full max-w-[240px] rounded-full"
                         >
                           {t("global.search")}
                         </Button>

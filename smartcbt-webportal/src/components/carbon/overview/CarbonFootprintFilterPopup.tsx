@@ -103,7 +103,7 @@ export const CarbonFootprintFilterPopup = (props: CarbonFootprintFilterPopupProp
     <Dialog open={isOpen} onClose={close} className="relative z-50">
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <Dialog.Panel className="mx-auto flex max-h-[90%] min-w-[400px] max-w-[80%] flex-col items-center gap-5 rounded-xl bg-white p-8">
+        <Dialog.Panel className="mx-auto flex max-h-[95vh] w-full min-w-0 max-w-[95%] flex-col items-center gap-5 overflow-y-auto rounded-xl bg-white p-6 shadow-2xl md:max-w-[600px] md:p-8 lg:min-w-[400px]">
           <div className="flex w-full flex-col gap-4">
             <div className="flex justify-center">{t("carbon.overview.popup.filter.title")}</div>
             <Tab.Group selectedIndex={selectedIndex} onChange={setSelectedIndex}>
@@ -113,7 +113,7 @@ export const CarbonFootprintFilterPopup = (props: CarbonFootprintFilterPopupProp
               </Tab.List>
               <Tab.Panels>
                 <Tab.Panel>
-                  <div className="flex justify-center p-12">
+                  <div className="flex justify-center p-4 md:p-12">
                     <DatePicker
                       selected={startDate}
                       onChange={handleOnChangeDate}
@@ -127,7 +127,7 @@ export const CarbonFootprintFilterPopup = (props: CarbonFootprintFilterPopupProp
                   </div>
                 </Tab.Panel>
                 <Tab.Panel>
-                  <div className="flex justify-center p-12">
+                  <div className="flex justify-center p-4 md:p-12">
                     <DatePicker
                       selected={startMonth}
                       onChange={handleOnChangeMonth}
@@ -145,11 +145,17 @@ export const CarbonFootprintFilterPopup = (props: CarbonFootprintFilterPopupProp
               </Tab.Panels>
             </Tab.Group>
           </div>
-          <div className="flex flex-row gap-4">
-            <Button type="button" onClick={() => onClose(false)} intent="secondary">
+          <div className="flex w-full flex-row justify-center gap-4 mt-2">
+            <Button
+              type="button"
+              onClick={() => onClose(false)}
+              intent="secondary"
+              size="small"
+              className="px-8"
+            >
               {t("global.cancel")}
             </Button>
-            <Button onClick={handleOnClick} intent="primary">
+            <Button onClick={handleOnClick} intent="primary" size="small" className="px-8">
               {t("global.ok")}
             </Button>
           </div>
