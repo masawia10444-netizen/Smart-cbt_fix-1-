@@ -325,17 +325,19 @@ async function registerUser(user: RegisterUser) {
   }
 }
 
-async function registerMTokenUser(profile: MTokenProfile, appCode: string) {
+async function registerMTokenUser(profile: MTokenProfile, appCode: string, password = "") {
   if (!profile.email?.trim()) {
     throw "ไม่พบอีเมลจาก mToken";
+  }
+
+  if (!password.trim()) {
+    throw "กรุณากำหนดรหัสผ่าน";
   }
 
   const existingUser = await findUserAccountByEmail(profile.email.trim());
   if (existingUser) {
     return await loginWithStaticTokenByEmail(profile.email.trim(), appCode);
   }
-
-  const generatedPassword = `${globalThis.crypto.randomUUID()}Aa1!`;
 
   // Fix: Need admin token to create users in Directus
   const adminToken = getCmsAdminToken();
@@ -345,7 +347,7 @@ async function registerMTokenUser(profile: MTokenProfile, appCode: string) {
   try {
     createDirectusUser = await createUserDirectus({
       email: profile.email.trim(),
-      password: generatedPassword,
+      password: password.trim(),
       first_name: profile.firstName?.trim() || "",
       last_name: profile.lastName?.trim() || "",
       language: "th-TH",

@@ -15,34 +15,32 @@ export const registerSchema = z
     isMToken: z.preprocess((value) => value === "true" || value === true, z.boolean()).optional().default(false),
   })
   .superRefine((form, ctx) => {
-    if (!form.isMToken) {
-      if (!form.password || form.password.length < PASSWORD_MIN_LENGTH) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.too_small,
-          minimum: PASSWORD_MIN_LENGTH,
-          type: "string",
-          inclusive: true,
-          path: ["password"],
-        });
-      }
+    if (!form.password || form.password.length < PASSWORD_MIN_LENGTH) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.too_small,
+        minimum: PASSWORD_MIN_LENGTH,
+        type: "string",
+        inclusive: true,
+        path: ["password"],
+      });
+    }
 
-      if (!form.confirmPassword || form.confirmPassword.length < PASSWORD_MIN_LENGTH) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.too_small,
-          minimum: PASSWORD_MIN_LENGTH,
-          type: "string",
-          inclusive: true,
-          path: ["confirmPassword"],
-        });
-      }
+    if (!form.confirmPassword || form.confirmPassword.length < PASSWORD_MIN_LENGTH) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.too_small,
+        minimum: PASSWORD_MIN_LENGTH,
+        type: "string",
+        inclusive: true,
+        path: ["confirmPassword"],
+      });
+    }
 
-      if ((form.password || "") !== (form.confirmPassword || "")) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["confirmPassword"],
-          params: { i18n: "password_not_match" },
-        });
-      }
+    if ((form.password || "") !== (form.confirmPassword || "")) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["confirmPassword"],
+        params: { i18n: "password_not_match" },
+      });
     }
   });
 

@@ -21,7 +21,7 @@ export async function register(body: RegisterSchema) {
         notification: body.notification ?? cookieProfile?.notification ?? false,
       };
 
-      const authData = await registerMTokenUser(profile, "PORTAL");
+      const authData = await registerMTokenUser(profile, "PORTAL", body.password);
       await clearMTokenRegisterProfileCookie();
 
       if (authData?.access_token) {

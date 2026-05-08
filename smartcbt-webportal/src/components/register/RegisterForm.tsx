@@ -108,36 +108,32 @@ const RegisterForm = ({ initialMTokenProfile = null }: RegisterFormProps) => {
             }}
           />
 
-          {!isMToken && (
-            <>
-              <FloatingLabelTextInput
-                placeholder={t("global.password")}
-                type="password"
-                name="password"
-                control={control}
-                useMessage={errors.password?.type == "invalid_type" ? false : true}
-                errorMessage={errors?.password?.message}
-                onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                  if (e.keyCode == 32) {
-                    e.preventDefault();
-                  }
-                }}
-              />
-              <FloatingLabelTextInput
-                placeholder={t("register.confirmPassword")}
-                type="password"
-                name="confirmPassword"
-                control={control}
-                useMessage={errors.confirmPassword?.type == "invalid_type" ? false : true}
-                errorMessage={errors?.confirmPassword?.message}
-                onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                  if (e.keyCode == 32) {
-                    e.preventDefault();
-                  }
-                }}
-              />
-            </>
-          )}
+          <FloatingLabelTextInput
+            placeholder={t("global.password")}
+            type="password"
+            name="password"
+            control={control}
+            useMessage={errors.password?.type == "invalid_type" ? false : true}
+            errorMessage={errors?.password?.message}
+            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+              if (e.keyCode == 32) {
+                e.preventDefault();
+              }
+            }}
+          />
+          <FloatingLabelTextInput
+            placeholder={t("register.confirmPassword")}
+            type="password"
+            name="confirmPassword"
+            control={control}
+            useMessage={errors.confirmPassword?.type == "invalid_type" ? false : true}
+            errorMessage={errors?.confirmPassword?.message}
+            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+              if (e.keyCode == 32) {
+                e.preventDefault();
+              }
+            }}
+          />
 
           <FloatingLabelTextInput
             placeholder={t("register.phoneNumber")}
