@@ -1,4 +1,4 @@
-"use server";
+
 
 import { cookies } from "next/headers";
 import { MTOKEN_SESSION_KEY } from "@/utils/token";

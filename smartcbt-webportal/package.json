@@ -4,9 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "cross-env NODE_OPTIONS='--inspect' next dev",
+    "dev:local": "next dev",
     "build": "cross-env NODE_OPTIONS='--max-old-space-size=10000' next build",
+    "build:local": "next build",
     "start": "next start",
     "lint": "next lint",
+    "mtoken:mock": "node ./scripts/generate-mtoken-smart-mock.mjs",
+    "snapshot:export": "node ./scripts/export-directus-snapshot.mjs",
     "format": "npx prettier --config .prettierrc --check --ignore-path .gitignore .",
     "format:fix": "npx prettier --config .prettierrc --write --ignore-path .gitignore .",
     "postbuild": "next-sitemap --config next-sitemap.config.js"

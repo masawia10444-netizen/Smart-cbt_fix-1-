@@ -6,8 +6,8 @@ FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Install pnpm
-RUN npm install -g pnpm
+# Install pnpm version compatible with Node 18
+RUN npm install -g pnpm@8.15.9
 
 # Install dependencies based on the preferred package manager
 COPY package.json pnpm-lock.yaml* ./
@@ -23,7 +23,7 @@ ENV GENERATE_SOURCEMAP=false
 ENV NODE_OPTIONS=--max-old-space-size=16384
 ENV BUILD_STANDALONE=true
 
-RUN npm install -g pnpm
+RUN npm install -g pnpm@8.15.9
 RUN pnpm run build
 
 # 3. Production image, copy all the files and run next

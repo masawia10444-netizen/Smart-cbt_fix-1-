@@ -1,27 +1,18 @@
-// Test mToken login directly
-const appId = "fd69ea74-590e-442f-ac8c-a71a93a42d0a";
-const mToken = "26fcfdd749444a4dbc67297de74349b6";
+// Build a local Smart Mock mToken login URL for browser testing.
+const profile = {
+  userId: "mock-user-001",
+  citizenId: "1101700203451",
+  firstName: "Smart",
+  lastName: "Mock",
+  dateOfBirthString: "1990-01-01",
+  mobile: "0812345678",
+  email: "smart.mock@example.com",
+  notification: true,
+};
+
+const appId = "smart-local-app";
 const appCode = "PORTAL";
+const mToken = `smart-mock:${Buffer.from(JSON.stringify(profile), "utf8").toString("base64")}`;
+const loginUrl = `http://localhost:3000/th/login?appId=${encodeURIComponent(appId)}&appCode=${encodeURIComponent(appCode)}&mToken=${encodeURIComponent(mToken)}`;
 
-async function testMToken() {
-  try {
-    const response = await fetch("http://localhost:3000/th/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        appId,
-        mToken,
-        appCode,
-      }),
-    });
-
-    const data = await response.json();
-    console.log("Response:", JSON.stringify(data, null, 2));
-  } catch (error) {
-    console.error("Error:", error);
-  }
-}
-
-testMToken();
+console.log(JSON.stringify({ appId, appCode, profile, mToken, loginUrl }, null, 2));

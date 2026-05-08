@@ -12,6 +12,8 @@ RUN corepack enable && corepack prepare pnpm@8.5.1 --activate
 
 USER node
 
+RUN pnpm config set dangerouslyAllowAllBuilds true
+
 # FIX: Previous version deleted node_modules which broke native binaries (argon2)
 # Original code (commented out for history):
 # RUN rm -rf node_modules
@@ -36,3 +38,5 @@ RUN pnpm add --shamefully-hoist \
     directus-extension-display-link \
     directus-extension-m2o-presentation-interface \
     directus-extension-group-tabs-interface
+
+RUN pnpm rebuild argon2 sharp isolated-vm sqlite3
