@@ -34,8 +34,8 @@ const CarbonFootprintGraphSummary = (props: FootprintDashboardCalculationResultW
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-[420px] flex-col items-center gap-2">
-      <div className="flex w-full justify-between items-start px-2">
+    <div className="mx-auto flex w-full max-w-xs sm:max-w-xl flex-col items-center gap-2">
+      <div className="flex w-full justify-between items-start px-">
         <div className="flex flex-col gap-1 text-center text-smart-cbt-green-2">
           <PercentLabel value={props.accommodation_cf.proportion} />
           <GraphLabel title={t("carbon.summary.type.accomodations")} icon={AccommodationIcon} />
@@ -49,7 +49,7 @@ const CarbonFootprintGraphSummary = (props: FootprintDashboardCalculationResultW
       </div>
 
       {/* Chart Area */}
-      <div className="relative -my-6 sm:-my-14 w-full h-[280px] sm:h-[350px] flex justify-center">
+      <div className="relative -my-6 sm:-my-8 w-full h-[220px] sm:h-[200px] flex justify-center">
         <div className="w-full max-w-[300px] sm:max-w-[350px]">
           <PolarArea options={data.options} data={data.data} plugins={ShadowPlugin} />
         </div>

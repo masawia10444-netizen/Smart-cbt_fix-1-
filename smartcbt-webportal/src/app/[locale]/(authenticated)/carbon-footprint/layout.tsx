@@ -14,7 +14,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <Fragment>
       <NavigationBar onToggle={toggleMobileMenu} isMobileOpened={isMobileOpened} />
-      <div className="relative h-full px-4 pb-6 pt-20 md:container md:mx-auto">{children}</div>
+      <div className="relative h-full px-4 pb-6 pt-20 md:mx-auto">{children}</div>
     </Fragment>
   );
 }

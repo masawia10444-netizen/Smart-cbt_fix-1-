@@ -96,7 +96,7 @@ const CarbonFootprintOverview = () => {
   if (isLoading) return <LoadingSpinner />;
   else
     return (
-      <div className="relative h-full">
+      <div className="flex flex-col relative h-full">
         <div className="flex h-full flex-col gap-4">
           <div className="flex justify-between">
             <h1 className="text-2xl font-medium text-smart-cbt-dark-green">{t("carbon.carbonFootprint")}</h1>
@@ -108,10 +108,10 @@ const CarbonFootprintOverview = () => {
               {t("carbon.viewAllProjectInformation")}
             </NextLink>
           </div>
-          <div className="flex h-full flex-col gap-6 overflow-y-auto lg:overflow-visible">
-            <div className="flex flex-col lg:flex-row gap-6">
-              <div className="flex w-full lg:w-[342px] flex-col gap-6">
-                <CarbonFootprintOverviewCard className="flex flex-col items-end gap-6 px-6 font-medium">
+          <div className="flex h-full flex-col gap-6">
+            <div className="flex flex-col xl:flex-row gap-6">
+              <div className="flex w-full flex-col gap-6">
+                <CarbonFootprintOverviewCard className="flex flex-col items-start xl:items-end gap-6 px-6 font-medium">
                   <p className=" text-smart-cbt-medium-grey">{t("carbon.overview.totalFootprint")}</p>
                   <p className="text-2xl text-smart-cbt-green md:text-3xl">
                     {summaryCarbonData?.totalCarbon.toFixed(4)} kgCO2eq
@@ -122,7 +122,7 @@ const CarbonFootprintOverview = () => {
                 </CarbonFootprintOverviewCard>
               </div>
               <div className="flex flex-grow flex-col gap-6 ">
-                <div className="flex flex-col lg:flex-row gap-6">
+                <div className="flex flex-col xl:flex-row gap-6">
                   <CarbonFootprintOverviewCard className="flex-grow min-h-[400px]">
                     <CarbonFootprintNationalLevelGraph
                       type={filterType}
@@ -131,7 +131,7 @@ const CarbonFootprintOverview = () => {
                       onOpenFilterPopup={() => setShowFilterPopup(true)}
                     />
                   </CarbonFootprintOverviewCard>
-                  <CarbonFootprintOverviewCard className="flex w-full lg:w-[342px] min-h-[400px]">
+                  <CarbonFootprintOverviewCard className="flex w-full xl:w-[342px] min-h-[400px]">
                     <CarbonFootprintSummaryGraph pieChartCarbon={pieChartCarbonData} />
                   </CarbonFootprintOverviewCard>
                 </div>
