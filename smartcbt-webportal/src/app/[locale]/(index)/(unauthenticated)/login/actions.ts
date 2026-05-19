@@ -1,6 +1,11 @@
 "use server";
 
-import { findUserAccountByEmail, findUserAccountByMobile, loginWithStaticTokenByEmail } from "@/utils/cms/adapters/website/users/register";
+import {
+  findUserAccountByEmail,
+  findUserAccountByFullName,
+  findUserAccountByMobile,
+  loginWithStaticTokenByUserAccount,
+} from "@/utils/cms/adapters/website/users/register";
 import { loginEmail, loginMobile } from "@/utils/cms/cms-api-adapter";
 import { fetchMTokenProfile, setMTokenRegisterProfileCookie } from "@/utils/mtoken";
 import { extractAuthErrorMessage, extractErrorMessage } from "@/utils/error";
@@ -32,12 +37,12 @@ export async function login(body: Record<string, any | string>) {
     await setCookies(token, refreshToken, expires, body.appCode);
     setMTokenSession(false); // Ensure regular login clears any mToken flag
     return { success: true };
-} catch (error) {
-  console.log("login error:", error);
-  return {
-    error: extractAuthErrorMessage(error, "เข้าสู่ระบบไม่สำเร็จ"),
-  };
-}
+  } catch (error) {
+    console.log("login error:", error);
+    return {
+      error: extractAuthErrorMessage(error, "เข้าสู่ระบบไม่สำเร็จ"),
+    };
+  }
 }
 
 export async function loginWithMToken(body: { appId: string; mToken: string; appCode?: string }) {
@@ -45,7 +50,7 @@ export async function loginWithMToken(body: { appId: string; mToken: string; app
 
   try {
     let profile: any;
-    
+
     try {
       profile = await fetchMTokenProfile(body.appId, body.mToken);
     } catch (profileError) {
@@ -54,42 +59,60 @@ export async function loginWithMToken(body: { appId: string; mToken: string; app
       return { error: errorMsg };
     }
 
-    const email = String(profile?.email || "").trim().toLowerCase();
+    const email = String(profile?.email || "")
+      .trim()
+      .toLowerCase();
+    const mobile = String(profile?.mobile || "").trim();
+    const firstName = String(profile?.firstName || "").trim();
+    const lastName = String(profile?.lastName || "").trim();
 
-    if (!email) {
+    if (!email && !mobile && (!firstName || !lastName)) {
       return { error: "ไม่พบอีเมลจากข้อมูล mToken" };
     }
 
     let existingUser: any;
-    
-    try {
-      existingUser = await findUserAccountByEmail(email);
-    } catch (findError) {
-      console.error("loginWithMToken: findUserAccountByEmail failed:", findError);
-      const errorMsg = extractErrorMessage(findError, "ไม่สามารถค้นหาผู้ใช้ได้");
-      return { error: errorMsg };
-    }
-    
-    // Fallback: Check by mobile if email lookup failed
-    if (!existingUser && profile.mobile) {
+
+    if (email) {
       try {
-        existingUser = await findUserAccountByMobile(profile.mobile);
+        existingUser = await findUserAccountByEmail(email);
+      } catch (findError) {
+        console.error("loginWithMToken: findUserAccountByEmail failed:", findError);
+        const errorMsg = extractErrorMessage(findError, "ไม่สามารถค้นหาผู้ใช้ได้");
+        return { error: errorMsg };
+      }
+    }
+
+    // Fallback: Check by mobile if email lookup failed
+    if (!existingUser && mobile) {
+      try {
+        existingUser = await findUserAccountByMobile(mobile);
       } catch (findMobileError) {
         console.error("loginWithMToken: findUserAccountByMobile failed:", findMobileError);
       }
     }
 
+    // Fallback: Check by full name if email and mobile lookup failed
+    if (!existingUser && firstName && lastName) {
+      try {
+        existingUser = await findUserAccountByFullName(firstName, lastName);
+      } catch (findFullNameError) {
+        console.error("loginWithMToken: findUserAccountByFullName failed:", findFullNameError);
+        const errorMsg = extractErrorMessage(findFullNameError, "ไม่สามารถค้นหาผู้ใช้ด้วยชื่อและนามสกุลได้");
+        return { error: errorMsg };
+      }
+    }
+
     if (existingUser) {
       let authData: any;
-      
+
       try {
-        authData = await loginWithStaticTokenByEmail(existingUser.email, appCode);
+        authData = await loginWithStaticTokenByUserAccount(existingUser, appCode);
       } catch (authError) {
         console.error("loginWithMToken: loginWithStaticTokenByEmail failed:", authError);
         const errorMsg = extractAuthErrorMessage(authError, "ไม่สามารถสร้าง token ได้");
         return { error: errorMsg };
       }
-      
+
       if (!authData || !authData?.access_token) {
         return { error: "ไม่สามารถสร้าง access token สำหรับผู้ใช้ได้" };
       }
@@ -104,6 +127,10 @@ export async function loginWithMToken(body: { appId: string; mToken: string; app
       }
 
       return { redirectTo: "/main-menus", source: "login" };
+    }
+
+    if (!email) {
+      return { error: "ไม่พบอีเมลจากข้อมูล mToken สำหรับสมัครสมาชิกใหม่" };
     }
 
     try {

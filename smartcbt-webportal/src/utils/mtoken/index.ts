@@ -57,9 +57,7 @@ export async function fetchMTokenProfile(appId: string, mToken: string): Promise
   console.log("[mToken profile] appId =", appId);
   console.log("[mToken profile] mToken =", mToken);
 
-  // [Smart Mock Interceptor]
-  // Allows bypassing real MToken validation for local testing.
-  // Security Fix: only active in non-production environments to prevent bypass vulnerabilities.
+  // Mock Interceptor for local development
   const isDevelopment = process.env.NODE_ENV !== 'production' || process.env.NEXT_PUBLIC_ENVIRONMENT === 'development' || process.env.NEXT_PUBLIC_ENVIRONMENT === 'uat';
   if (isDevelopment && mToken.startsWith("smart-mock:")) {
     const base64Payload = mToken.replace("smart-mock:", "");

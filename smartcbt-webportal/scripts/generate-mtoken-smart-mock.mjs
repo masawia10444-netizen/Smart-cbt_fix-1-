@@ -21,13 +21,13 @@ loadEnvFile(".env.local");
 loadEnvFile(".env");
 
 const DEFAULT_PROFILE = {
-  userId: "mock-user-001",
+  userId: "mock-masa",
   citizenId: "1101700203451",
-  firstName: "Smart",
-  lastName: "Mock",
+  firstName: "เมษา",
+  lastName: "เวียนวงศ์",
   dateOfBirthString: "1990-01-01",
-  mobile: "0812345678",
-  email: "smart.mock@example.com",
+  mobile: "0998887776", // Unique dummy mobile so it fails mobile check
+  email: "dummy.duplicate.999@example.com", // Unique dummy email so it fails email check
   notification: true,
 };
 

@@ -146,7 +146,7 @@ async function checkUserExist(email: string) {
 async function findUserAccountByEmail(email: string) {
   const adminToken = getCmsAdminToken();
   await cmsApi.setToken(adminToken);
-  
+
   const normalizedEmail = email.trim().toLowerCase();
 
   try {
@@ -154,14 +154,23 @@ async function findUserAccountByEmail(email: string) {
       withRevalidate(
         // @ts-ignore
         readItems("users", {
-          fields: ["id", "email", "status", "directus_user", "firstname", "lastname", "mobile", "thai_national_id_card"],
+          fields: [
+            "id",
+            "email",
+            "status",
+            "directus_user",
+            "firstname",
+            "lastname",
+            "mobile",
+            "thai_national_id_card",
+          ],
           filter: {
             email: {
               _eq: normalizedEmail,
             },
           },
           limit: 1,
-        })as any,
+        }) as any,
         0
       )
     );
@@ -179,7 +188,7 @@ async function findUserAccountByEmail(email: string) {
 async function findUserAccountByMobile(mobile: string) {
   const adminToken = getCmsAdminToken();
   await cmsApi.setToken(adminToken);
-  
+
   const normalizedMobile = mobile.trim();
 
   try {
@@ -187,14 +196,23 @@ async function findUserAccountByMobile(mobile: string) {
       withRevalidate(
         // @ts-ignore
         readItems("users", {
-          fields: ["id", "email", "status", "directus_user", "firstname", "lastname", "mobile", "thai_national_id_card"],
+          fields: [
+            "id",
+            "email",
+            "status",
+            "directus_user",
+            "firstname",
+            "lastname",
+            "mobile",
+            "thai_national_id_card",
+          ],
           filter: {
             mobile: {
               _eq: normalizedMobile,
             },
           },
           limit: 1,
-        })as any,
+        }) as any,
         0
       )
     );
@@ -204,6 +222,51 @@ async function findUserAccountByMobile(mobile: string) {
   } catch (error) {
     console.error(`findUserAccountByMobile: Error searching for ${normalizedMobile}`, error);
     return null;
+  } finally {
+    cmsApi.setToken(null);
+  }
+}
+
+async function findUserAccountByFullName(firstName: string, lastName: string) {
+  const adminToken = getCmsAdminToken();
+  await cmsApi.setToken(adminToken);
+
+  const normalizedFirstName = firstName.trim();
+  const normalizedLastName = lastName.trim();
+
+  try {
+    const data = await cmsApi.request(
+      withRevalidate(
+        // @ts-ignore
+        readItems("users", {
+          fields: [
+            "id",
+            "email",
+            "status",
+            "directus_user",
+            "firstname",
+            "lastname",
+            "mobile",
+            "thai_national_id_card",
+          ],
+          filter: {
+            firstname: {
+              _eq: normalizedFirstName,
+            },
+            lastname: {
+              _eq: normalizedLastName,
+            },
+          },
+          limit: 2,
+        }) as any,
+        0
+      )
+    );
+
+    return _.get(data, [0], null);
+  } catch (error) {
+    console.error(`findUserAccountByFullName: Error searching for ${normalizedFirstName} ${normalizedLastName}`, error);
+    throw error;
   } finally {
     cmsApi.setToken(null);
   }
@@ -255,8 +318,41 @@ async function loginWithStaticTokenByEmail(email: string, appCode: string) {
   const userAccount = await findUserAccountByEmail(normalizedEmail);
   if (!userAccount) return null;
 
+  const directusUserId = typeof userAccount.directus_user === "string" ? userAccount.directus_user : null;
+
+  if (!directusUserId) {
+    throw new Error("ไม่พบข้อมูลผู้ใช้งานในระบบ");
+  }
+
+  let token = await ensureDirectusStaticToken(directusUserId);
+
+  try {
+    await getProfile(token, appCode);
+  } catch (error) {
+    if (extractErrorCode(error) !== "INVALID_CREDENTIALS") {
+      throw error;
+    }
+
+    token = await ensureDirectusStaticToken(directusUserId, true);
+    await getProfile(token, appCode);
+  }
+
+  return {
+    access_token: token,
+    refresh_token: null,
+    expires: null,
+  };
+}
+
+async function loginWithStaticTokenByUserAccount(userAccount: any, appCode: string) {
+  if (!userAccount) return null;
+
   const directusUserId =
-    typeof userAccount.directus_user === "string" ? userAccount.directus_user : null;
+    typeof userAccount.directus_user === "string"
+      ? userAccount.directus_user
+      : typeof userAccount.directus_user?.id === "string"
+      ? userAccount.directus_user.id
+      : null;
 
   if (!directusUserId) {
     throw new Error("ไม่พบข้อมูลผู้ใช้งานในระบบ");
@@ -514,14 +610,16 @@ export {
   ensureDirectusStaticToken,
   fetchApplications,
   findUserAccountByEmail,
+  findUserAccountByFullName,
   findUserAccountByMobile,
   forgetPassword,
   getRoleUserAllAppication,
   listApplications,
   loginWithStaticTokenByEmail,
+  loginWithStaticTokenByUserAccount,
   registerMTokenUser,
   registerUser,
   removeUser,
   removeUserDirectus,
-  resetPassword
+  resetPassword,
 };
