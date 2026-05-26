@@ -23,7 +23,11 @@ const RegisterForm = ({ initialMTokenProfile = null }: RegisterFormProps) => {
   const router = useRouter();
 
   const [isLoading, setIsLoading] = useState(false);
-  const isMToken = useMemo(() => Boolean(initialMTokenProfile?.email), [initialMTokenProfile]);
+  const isMToken = useMemo(() => Boolean(initialMTokenProfile), [initialMTokenProfile]);
+  const lockEmail = Boolean(initialMTokenProfile?.email);
+  const lockMobile = Boolean(initialMTokenProfile?.mobile);
+  const lockFirstName = Boolean(initialMTokenProfile?.firstName);
+  const lockLastName = Boolean(initialMTokenProfile?.lastName);
 
   const {
     handleSubmit,
@@ -39,8 +43,8 @@ const RegisterForm = ({ initialMTokenProfile = null }: RegisterFormProps) => {
       phoneNumber: initialMTokenProfile?.mobile || "",
       firstName: initialMTokenProfile?.firstName || "",
       lastName: initialMTokenProfile?.lastName || "",
-      citizenId: initialMTokenProfile?.citizenId || "",
-      dateOfBirthString: initialMTokenProfile?.dateOfBirthString || "",
+      citizenId: "",
+      dateOfBirthString: "",
       notification: Boolean(initialMTokenProfile?.notification),
       isMToken,
     },
@@ -70,8 +74,8 @@ const RegisterForm = ({ initialMTokenProfile = null }: RegisterFormProps) => {
         <form className="mt-4 flex w-full flex-col items-center space-y-2 md:space-y-4" onSubmit={onSubmit}>
           <h1 className="text-center text-2xl font-medium text-smart-cbt-green md:text-4xl">{t("register.title")}</h1>
 
-          <input type="hidden" value={initialMTokenProfile?.citizenId || ""} {...registerField("citizenId")} />
-          <input type="hidden" value={initialMTokenProfile?.dateOfBirthString || ""} {...registerField("dateOfBirthString")} />
+          <input type="hidden" value="" {...registerField("citizenId")} />
+          <input type="hidden" value="" {...registerField("dateOfBirthString")} />
           <input type="hidden" value={initialMTokenProfile?.notification ? "true" : "false"} {...registerField("notification")} />
           <input type="hidden" value={isMToken ? "true" : "false"} {...registerField("isMToken")} />
 
@@ -82,14 +86,14 @@ const RegisterForm = ({ initialMTokenProfile = null }: RegisterFormProps) => {
                 type="text"
                 name="firstName"
                 control={control}
-                readOnly
+                readOnly={lockFirstName}
               />
               <FloatingLabelTextInput
                 placeholder="นามสกุล"
                 type="text"
                 name="lastName"
                 control={control}
-                readOnly
+                readOnly={lockLastName}
               />
             </>
           )}
@@ -99,7 +103,7 @@ const RegisterForm = ({ initialMTokenProfile = null }: RegisterFormProps) => {
             type="email"
             name="email"
             control={control}
-            readOnly={isMToken}
+            readOnly={lockEmail}
             errorMessage={errors?.email?.message}
             onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
               if (e.keyCode == 32) {
@@ -141,7 +145,7 @@ const RegisterForm = ({ initialMTokenProfile = null }: RegisterFormProps) => {
             maxLength={10}
             name="phoneNumber"
             control={control}
-            readOnly={isMToken}
+            readOnly={lockMobile}
             errorMessage={errors?.phoneNumber?.message}
             onInput={validatePhone}
           />

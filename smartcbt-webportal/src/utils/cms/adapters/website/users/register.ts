@@ -3,7 +3,7 @@
 import { getProfile } from "@/utils/cms/adapters/authen";
 import { getCmsAdminToken, getJwtExpiredIn, getJwtSecretKey, getUserRoleId } from "@/utils/cms/api-helpers";
 import cmsApi, { setAdminToken, withRevalidate } from "@/utils/cms/cms-api";
-import { extractAuthErrorMessage, extractErrorCode } from "@/utils/error";
+import { extractAuthErrorMessage, extractErrorCode, extractErrorMessage } from "@/utils/error";
 import { MTokenProfile } from "@/utils/mtoken";
 import { createItem, createUser, deleteUser, readItems, readUsers, updateItem, updateUser } from "@directus/sdk";
 import * as jose from "jose";
@@ -21,7 +21,21 @@ async function createUserDirectus(user: DirectusUser) {
     );
     return data;
   } catch (error: unknown) {
-    throw "มีผู้ใช้นี้อยู่แล้ว";
+    const code = extractErrorCode(error);
+    const field = String(_.get(error, "errors.0.extensions.field", ""));
+    const message = extractErrorMessage(error, "");
+
+    if (
+      code === "RECORD_NOT_UNIQUE" ||
+      code === "UNIQUE_CONSTRAINT_VIOLATION" ||
+      field === "email" ||
+      message.includes("directus_users_email_unique")
+    ) {
+      throw "มีผู้ใช้นี้อยู่แล้ว";
+    }
+
+    console.error("createUserDirectus failed:", error);
+    throw message || "สร้างบัญชีผู้ใช้ไม่สำเร็จ";
   }
 }
 
@@ -58,14 +72,31 @@ async function createUserAccount(user: UserAccount) {
       };
     }[] = _.get(error, "errors", []);
 
-    if (errors.length > 0 && errors[0].extensions.code === "UNIQUE_CONSTRAINT_VIOLATION") {
+    const firstError = errors[0];
+    const code = firstError?.extensions?.code;
+    const field = firstError?.extensions?.field;
+    const message = _.get(error, "errors.0.message", "");
+
+    if (code === "RECORD_NOT_UNIQUE" && field === "mobile") {
+      throw "เบอร์โทรศัพท์นี้มีผู้ใช้งานอยู่แล้ว";
+    }
+
+    if (code === "RECORD_NOT_UNIQUE" && field === "email") {
       throw "มีผู้ใช้นี้อยู่แล้ว";
-    } else if (
-      errors.length > 0 &&
-      errors[0].extensions.code === "RECORD_NOT_UNIQUE" &&
-      errors[0].extensions.field === "mobile"
+    }
+
+    if (
+      code === "UNIQUE_CONSTRAINT_VIOLATION" &&
+      (field === "mobile" || message.includes("users_mobile_unique"))
     ) {
-      throw "เบอร์มือถือซ้ำ";
+      throw "เบอร์โทรศัพท์นี้มีผู้ใช้งานอยู่แล้ว";
+    }
+
+    if (
+      code === "UNIQUE_CONSTRAINT_VIOLATION" &&
+      (field === "email" || message.includes("users_email_unique"))
+    ) {
+      throw "มีผู้ใช้นี้อยู่แล้ว";
     }
 
     throw "สมัครสมาชิกไม่สำเร็จ";
@@ -143,11 +174,91 @@ async function checkUserExist(email: string) {
   return data;
 }
 
+function normalizeEmail(email: string) {
+  return email.trim().toLowerCase();
+}
+
+function normalizeMobile(mobile: string) {
+  const trimmed = mobile.trim();
+  const digits = trimmed.replace(/[^\d+]/g, "");
+
+  if (digits.startsWith("+66")) {
+    return `0${digits.slice(3).replace(/\D/g, "")}`;
+  }
+
+  if (digits.startsWith("66")) {
+    return `0${digits.slice(2).replace(/\D/g, "")}`;
+  }
+
+  return digits.replace(/\D/g, "");
+}
+
+function getMobileLookupValues(mobile: string) {
+  const trimmed = mobile.trim();
+  const normalized = normalizeMobile(trimmed);
+  const values = new Set<string>();
+
+  if (trimmed) values.add(trimmed);
+  if (normalized) values.add(normalized);
+
+  if (normalized.startsWith("0") && normalized.length > 1) {
+    values.add(`+66${normalized.slice(1)}`);
+    values.add(`66${normalized.slice(1)}`);
+  }
+
+  return Array.from(values);
+}
+
 async function findUserAccountByEmail(email: string) {
   const adminToken = getCmsAdminToken();
   await cmsApi.setToken(adminToken);
 
-  const normalizedEmail = email.trim().toLowerCase();
+  const normalizedEmail = normalizeEmail(email);
+
+  try {
+    const data = await cmsApi.request(
+      withRevalidate(
+        // @ts-ignore
+        readItems("users", {
+          fields: [
+            "id",
+            "email",
+            "status",
+            "directus_user",
+            "firstname",
+            "lastname",
+            "mobile",
+            "thai_national_id_card",
+          ],
+          filter: {
+            email: {
+              _eq: normalizedEmail,
+            },
+            status: {
+              _eq: "published",
+            },
+          },
+          limit: 1,
+        }) as any,
+        0
+      )
+    );
+
+    const found = _.get(data, [0], null);
+    return found;
+  } catch (error) {
+    console.error("findUserAccountByEmail failed:", error);
+    throw error;
+  } finally {
+    cmsApi.setToken(null);
+  }
+}
+
+async function findUserAccountByEmailAnyStatus(email: string) {
+  const adminToken = getCmsAdminToken();
+  await cmsApi.setToken(adminToken);
+
+  const normalizedEmail = normalizeEmail(email);
 
   try {
     const data = await cmsApi.request(
@@ -175,11 +286,10 @@ async function findUserAccountByEmail(email: string) {
       )
     );
 
-    const found = _.get(data, [0], null);
-    return found;
+    return _.get(data, [0], null);
   } catch (error) {
-    console.error(`findUserAccountByEmail: Error searching for ${normalizedEmail}`, error);
-    return null;
+    console.error("findUserAccountByEmailAnyStatus failed:", error);
+    throw error;
   } finally {
     cmsApi.setToken(null);
   }
@@ -189,9 +299,11 @@ async function findUserAccountByMobile(mobile: string) {
   const adminToken = getCmsAdminToken();
   await cmsApi.setToken(adminToken);
 
-  const normalizedMobile = mobile.trim();
+  const lookupValues = getMobileLookupValues(mobile);
 
   try {
+    if (lookupValues.length === 0) return null;
+
     const data = await cmsApi.request(
       withRevalidate(
         // @ts-ignore
@@ -207,21 +319,75 @@ async function findUserAccountByMobile(mobile: string) {
             "thai_national_id_card",
           ],
           filter: {
-            mobile: {
-              _eq: normalizedMobile,
+            _or: lookupValues.map((value) => ({
+              mobile: {
+                _eq: value,
+              },
+            })),
+            status: {
+              _eq: "published",
             },
           },
-          limit: 1,
+          limit: 2,
         }) as any,
         0
       )
     );
 
+    if (Array.isArray(data) && data.length > 1) {
+      throw new Error("พบผู้ใช้งานเบอร์โทรศัพท์ซ้ำ ไม่สามารถเข้าสู่ระบบอัตโนมัติได้");
+    }
+
     const found = _.get(data, [0], null);
     return found;
   } catch (error) {
-    console.error(`findUserAccountByMobile: Error searching for ${normalizedMobile}`, error);
-    return null;
+    console.error("findUserAccountByMobile failed:", error);
+    throw error;
+  } finally {
+    cmsApi.setToken(null);
+  }
+}
+
+async function findUserAccountsByMobileAnyStatus(mobile: string) {
+  const adminToken = getCmsAdminToken();
+  await cmsApi.setToken(adminToken);
+
+  const lookupValues = getMobileLookupValues(mobile);
+
+  try {
+    if (lookupValues.length === 0) return [];
+
+    const data = await cmsApi.request(
+      withRevalidate(
+        // @ts-ignore
+        readItems("users", {
+          fields: [
+            "id",
+            "email",
+            "status",
+            "directus_user",
+            "firstname",
+            "lastname",
+            "mobile",
+            "thai_national_id_card",
+          ],
+          filter: {
+            _or: lookupValues.map((value) => ({
+              mobile: {
+                _eq: value,
+              },
+            })),
+          },
+          limit: 2,
+        }) as any,
+        0
+      )
+    );
+
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error("findUserAccountsByMobileAnyStatus failed:", error);
+    throw error;
   } finally {
     cmsApi.setToken(null);
   }
@@ -256,6 +422,9 @@ async function findUserAccountByFullName(firstName: string, lastName: string) {
             lastname: {
               _eq: normalizedLastName,
             },
+            status: {
+              _eq: "published",
+            },
           },
           limit: 2,
         }) as any,
@@ -263,9 +432,52 @@ async function findUserAccountByFullName(firstName: string, lastName: string) {
       )
     );
 
+    if (Array.isArray(data) && data.length > 1) {
+      throw new Error("พบผู้ใช้งานชื่อและนามสกุลซ้ำ ไม่สามารถเข้าสู่ระบบอัตโนมัติได้");
+    }
+
     return _.get(data, [0], null);
   } catch (error) {
-    console.error(`findUserAccountByFullName: Error searching for ${normalizedFirstName} ${normalizedLastName}`, error);
+    console.error("findUserAccountByFullName failed:", error);
+    throw error;
+  } finally {
+    cmsApi.setToken(null);
+  }
+}
+
+async function findUserAccountByDirectusUserAnyStatus(directusUserId: string) {
+  const adminToken = getCmsAdminToken();
+  await cmsApi.setToken(adminToken);
+
+  try {
+    const data = await cmsApi.request(
+      withRevalidate(
+        // @ts-ignore
+        readItems("users", {
+          fields: [
+            "id",
+            "email",
+            "status",
+            "directus_user",
+            "firstname",
+            "lastname",
+            "mobile",
+            "thai_national_id_card",
+          ],
+          filter: {
+            directus_user: {
+              _eq: directusUserId,
+            },
+          },
+          limit: 1,
+        }) as any,
+        0
+      )
+    );
+
+    return _.get(data, [0], null);
+  } catch (error) {
+    console.error("findUserAccountByDirectusUserAnyStatus failed:", error);
     throw error;
   } finally {
     cmsApi.setToken(null);
@@ -313,7 +525,7 @@ async function ensureDirectusStaticToken(directusUserId: string, forceRefresh = 
 }
 
 async function loginWithStaticTokenByEmail(email: string, appCode: string) {
-  const normalizedEmail = email.trim().toLowerCase();
+  const normalizedEmail = normalizeEmail(email);
 
   const userAccount = await findUserAccountByEmail(normalizedEmail);
   if (!userAccount) return null;
@@ -430,41 +642,94 @@ async function registerMTokenUser(profile: MTokenProfile, appCode: string, passw
     throw "กรุณากำหนดรหัสผ่าน";
   }
 
-  const existingUser = await findUserAccountByEmail(profile.email.trim());
+  const normalizedEmail = normalizeEmail(profile.email);
+  const normalizedMobile = profile.mobile ? normalizeMobile(profile.mobile) : "";
+
+  const existingUser = await findUserAccountByEmail(normalizedEmail);
   if (existingUser) {
-    return await loginWithStaticTokenByEmail(profile.email.trim(), appCode);
+    return await loginWithStaticTokenByUserAccount(existingUser, appCode);
   }
 
-  // Fix: Need admin token to create users in Directus
+  const existingUserAnyStatus = await findUserAccountByEmailAnyStatus(normalizedEmail);
+  if (existingUserAnyStatus) {
+    if (existingUserAnyStatus.status === "archived") {
+      throw "ผู้ใช้งานนี้ถูกลบไปแล้ว";
+    }
+
+    return await loginWithStaticTokenByUserAccount(existingUserAnyStatus, appCode);
+  }
+
+  if (normalizedMobile) {
+    const mobileMatches = await findUserAccountsByMobileAnyStatus(normalizedMobile);
+    if (mobileMatches.length > 0) {
+      throw "เบอร์โทรศัพท์นี้มีผู้ใช้งานอยู่แล้ว";
+    }
+  }
+
+  const directusUsers = await checkUserExist(normalizedEmail);
+  const existingDirectusUser = _.get(directusUsers, [0], null);
+
   const adminToken = getCmsAdminToken();
   await cmsApi.setToken(adminToken);
 
   let createDirectusUser;
-  try {
-    createDirectusUser = await createUserDirectus({
-      email: profile.email.trim(),
+  let shouldRemoveDirectusOnFailure = false;
+
+  if (existingDirectusUser?.id) {
+    if (existingDirectusUser.status === "archived") {
+      cmsApi.setToken(null);
+      throw "ผู้ใช้งานนี้ถูกลบไปแล้ว";
+    }
+
+    const accountByDirectusUser = await findUserAccountByDirectusUserAnyStatus(existingDirectusUser.id);
+    if (accountByDirectusUser) {
+      if (accountByDirectusUser.status === "archived") {
+        cmsApi.setToken(null);
+        throw "ผู้ใช้งานนี้ถูกลบไปแล้ว";
+      }
+
+      cmsApi.setToken(null);
+      return await loginWithStaticTokenByUserAccount(accountByDirectusUser, appCode);
+    }
+
+    await cmsApi.setToken(adminToken);
+    await updateUserDirectus(existingDirectusUser.id, {
       password: password.trim(),
-      first_name: profile.firstName?.trim() || "",
-      last_name: profile.lastName?.trim() || "",
-      language: "th-TH",
+      first_name: profile.firstName?.trim() || existingDirectusUser.first_name || "",
+      last_name: profile.lastName?.trim() || existingDirectusUser.last_name || "",
       status: "active",
-      role: getUserRoleId(),
+      role: existingDirectusUser.role || getUserRoleId(),
     });
-  } catch (error) {
-    cmsApi.setToken(null);
-    throw error;
+
+    createDirectusUser = existingDirectusUser;
+  } else {
+    try {
+      createDirectusUser = await createUserDirectus({
+        email: normalizedEmail,
+        password: password.trim(),
+        first_name: profile.firstName?.trim() || "",
+        last_name: profile.lastName?.trim() || "",
+        language: "th-TH",
+        status: "active",
+        role: getUserRoleId(),
+      });
+      shouldRemoveDirectusOnFailure = true;
+    } catch (error) {
+      cmsApi.setToken(null);
+      throw error;
+    }
   }
 
   try {
     const applicationsRoleUserList = await getRoleUserAllAppication();
     const createUserAccountData = await createUserAccount({
-      email: profile.email.trim(),
+      email: normalizedEmail,
       directus_user: createDirectusUser.id,
       status: "published",
-      mobile: profile.mobile?.trim() || null,
+      mobile: normalizedMobile || null,
       firstname: profile.firstName?.trim() || null,
       lastname: profile.lastName?.trim() || null,
-      thai_national_id_card: profile.citizenId?.trim() || null,
+      thai_national_id_card: null,
       applications: applicationsRoleUserList,
     });
 
@@ -483,7 +748,9 @@ async function registerMTokenUser(profile: MTokenProfile, appCode: string, passw
       expires: null,
     };
   } catch (error: unknown) {
-    await removeUserDirectus(createDirectusUser.id);
+    if (shouldRemoveDirectusOnFailure) {
+      await removeUserDirectus(createDirectusUser.id);
+    }
     cmsApi.setToken(null);
     throw error;
   }
@@ -613,6 +880,7 @@ export {
   findUserAccountByFullName,
   findUserAccountByMobile,
   forgetPassword,
+  normalizeMobile,
   getRoleUserAllAppication,
   listApplications,
   loginWithStaticTokenByEmail,

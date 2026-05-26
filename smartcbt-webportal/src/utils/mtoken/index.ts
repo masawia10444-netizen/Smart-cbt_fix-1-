@@ -2,10 +2,8 @@ import { cookies } from "next/headers";
 
 export type MTokenProfile = {
   userId?: string;
-  citizenId?: string;
   firstName?: string;
   lastName?: string;
-  dateOfBirthString?: string;
   mobile?: string;
   email?: string;
   notification?: boolean;
@@ -42,9 +40,6 @@ export async function fetchMTokenAuthToken() {
     payload = JSON.parse(raw);
   } catch {}
 
-  console.log("[mToken auth] status =", response.status);
-  console.log("[mToken auth] raw =", raw);
-
   if (!response.ok || !payload?.Result) {
     throw new Error(payload?.message || `mToken authentication failed (${response.status})`);
   }
@@ -54,9 +49,6 @@ export async function fetchMTokenAuthToken() {
 
 
 export async function fetchMTokenProfile(appId: string, mToken: string): Promise<MTokenProfile> {
-  console.log("[mToken profile] appId =", appId);
-  console.log("[mToken profile] mToken =", mToken);
-
   // Mock Interceptor for local development
   const isDevelopment = process.env.NODE_ENV !== 'production' || process.env.NEXT_PUBLIC_ENVIRONMENT === 'development' || process.env.NEXT_PUBLIC_ENVIRONMENT === 'uat';
   if (isDevelopment && mToken.startsWith("smart-mock:")) {
@@ -65,14 +57,10 @@ export async function fetchMTokenProfile(appId: string, mToken: string): Promise
       const decodedString = Buffer.from(base64Payload, "base64").toString("utf-8");
       const mockResult = JSON.parse(decodedString);
       
-      console.log("[mToken profile] Smart Mock matched, payload =", mockResult);
-      
       return {
         userId: mockResult.userId || mockResult.UserId || `mock-user-${Date.now()}`,
-        citizenId: mockResult.citizenId || mockResult.CitizenId,
         firstName: mockResult.firstName || mockResult.FirstName,
         lastName: mockResult.lastName || mockResult.LastName,
-        dateOfBirthString: mockResult.dateOfBirthString || mockResult.DateOfBirthString,
         mobile: mockResult.mobile || mockResult.Mobile || mockResult.telephone || mockResult.phoneNumber,
         email: mockResult.email || mockResult.Email,
         notification: mockResult.notification !== undefined ? mockResult.notification : mockResult.Notification,
@@ -112,11 +100,6 @@ export async function fetchMTokenProfile(appId: string, mToken: string): Promise
     payload = JSON.parse(raw);
   } catch {}
 
-  console.log("[mToken profile] appId =", appId);
-  console.log("[mToken profile] mToken =", mToken);
-  console.log("[mToken profile] status =", response.status);
-  console.log("[mToken profile] raw =", raw);
-
   if (!response.ok || payload?.messageCode !== 200 || !payload?.result) {
     const errorMessage = payload?.message || `ไม่สามารถดึงข้อมูลผู้ใช้จาก mToken ได้ (${response.status})`;
     
@@ -133,10 +116,8 @@ export async function fetchMTokenProfile(appId: string, mToken: string): Promise
   // Robust data mapping to handle different casing from UAT/Mock APIs
   return {
     userId: result.userId || result.UserId,
-    citizenId: result.citizenId || result.CitizenId,
     firstName: result.firstName || result.FirstName,
     lastName: result.lastName || result.LastName,
-    dateOfBirthString: result.dateOfBirthString || result.DateOfBirthString,
     mobile: result.mobile || result.Mobile || result.telephone || result.phoneNumber,
     email: result.email || result.Email,
     notification: result.notification !== undefined ? result.notification : result.Notification

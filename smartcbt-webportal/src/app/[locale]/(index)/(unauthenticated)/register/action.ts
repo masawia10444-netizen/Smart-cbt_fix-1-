@@ -1,24 +1,29 @@
 "use server";
 
 import { RegisterSchema } from "@/schemas/forms/register-schema";
-import { registerMTokenUser, registerUser } from "@/utils/cms/adapters/website/users/register";
+import { normalizeMobile, registerMTokenUser, registerUser } from "@/utils/cms/adapters/website/users/register";
 import { extractErrorMessage } from "@/utils/error";
 import { clearMTokenRegisterProfileCookie, getMTokenRegisterProfileCookie } from "@/utils/mtoken";
-import { setCookies } from "@/utils/token";
+import { setCookies, setMTokenSession } from "@/utils/token";
 import { RegisterUser } from "@/utils/cms/adapters/website/users/types/user";
 
 export async function register(body: RegisterSchema) {
   try {
     if (body.isMToken) {
       const cookieProfile = await getMTokenRegisterProfileCookie();
+
+      if (!cookieProfile) {
+        return {
+          error: "ไม่พบข้อมูล mToken สำหรับสมัครสมาชิก กรุณาเข้าสู่ระบบด้วย mToken ใหม่อีกครั้ง",
+        };
+      }
+
       const profile = {
-        email: body.email || cookieProfile?.email || "",
-        mobile: body.phoneNumber || cookieProfile?.mobile || "",
-        firstName: body.firstName || cookieProfile?.firstName || "",
-        lastName: body.lastName || cookieProfile?.lastName || "",
-        citizenId: body.citizenId || cookieProfile?.citizenId || "",
-        dateOfBirthString: body.dateOfBirthString || cookieProfile?.dateOfBirthString || "",
-        notification: body.notification ?? cookieProfile?.notification ?? false,
+        email: cookieProfile.email || body.email || "",
+        mobile: normalizeMobile(cookieProfile.mobile || body.phoneNumber || ""),
+        firstName: cookieProfile.firstName || body.firstName || "",
+        lastName: cookieProfile.lastName || body.lastName || "",
+        notification: cookieProfile.notification ?? body.notification ?? false,
       };
 
       const authData = await registerMTokenUser(profile, "PORTAL", body.password);
@@ -26,6 +31,7 @@ export async function register(body: RegisterSchema) {
 
       if (authData?.access_token) {
         await setCookies(authData.access_token, authData.refresh_token, authData.expires, "PORTAL");
+        setMTokenSession(true);
       }
 
       return {

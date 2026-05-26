@@ -39,12 +39,12 @@ export function getCmsMedia(url: string | DirectusFiles | null | undefined) {
 
 export function getUserRoleId() {
   // console.log("getCmsURL", process.env.NEXT_PUBLIC_CMS_URL);
-  return `${process.env.NEXT_PUBLIC_USER_ROLE_ID}`;
+  return process.env.NEXT_PUBLIC_USER_ROLE_ID || undefined;
 }
 
 export function getApiRoleId() {
   // console.log("getCmsURL", process.env.NEXT_PUBLIC_CMS_URL);
-  return `${process.env.NEXT_PUBLIC_API_ROLE_ID}`;
+  return process.env.NEXT_PUBLIC_API_ROLE_ID || undefined;
 }
 
 export function formatDate(dateString: string) {

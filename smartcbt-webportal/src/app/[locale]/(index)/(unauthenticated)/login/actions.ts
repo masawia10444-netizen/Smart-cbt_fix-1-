@@ -5,6 +5,7 @@ import {
   findUserAccountByFullName,
   findUserAccountByMobile,
   loginWithStaticTokenByUserAccount,
+  normalizeMobile,
 } from "@/utils/cms/adapters/website/users/register";
 import { loginEmail, loginMobile } from "@/utils/cms/cms-api-adapter";
 import { fetchMTokenProfile, setMTokenRegisterProfileCookie } from "@/utils/mtoken";
@@ -62,12 +63,12 @@ export async function loginWithMToken(body: { appId: string; mToken: string; app
     const email = String(profile?.email || "")
       .trim()
       .toLowerCase();
-    const mobile = String(profile?.mobile || "").trim();
+    const mobile = normalizeMobile(String(profile?.mobile || ""));
     const firstName = String(profile?.firstName || "").trim();
     const lastName = String(profile?.lastName || "").trim();
 
     if (!email && !mobile && (!firstName || !lastName)) {
-      return { error: "ไม่พบอีเมลจากข้อมูล mToken" };
+      return { error: "ไม่พบอีเมล เบอร์โทรศัพท์ หรือชื่อ-นามสกุลจากข้อมูล mToken" };
     }
 
     let existingUser: any;
@@ -88,6 +89,8 @@ export async function loginWithMToken(body: { appId: string; mToken: string; app
         existingUser = await findUserAccountByMobile(mobile);
       } catch (findMobileError) {
         console.error("loginWithMToken: findUserAccountByMobile failed:", findMobileError);
+        const errorMsg = extractErrorMessage(findMobileError, "ไม่สามารถค้นหาผู้ใช้ด้วยเบอร์โทรศัพท์ได้");
+        return { error: errorMsg };
       }
     }
 
@@ -129,8 +132,8 @@ export async function loginWithMToken(body: { appId: string; mToken: string; app
       return { redirectTo: "/main-menus", source: "login" };
     }
 
-    if (!email) {
-      return { error: "ไม่พบอีเมลจากข้อมูล mToken สำหรับสมัครสมาชิกใหม่" };
+    if (!email && !mobile) {
+      return { error: "ไม่พบอีเมลหรือเบอร์โทรศัพท์จากข้อมูล mToken สำหรับสมัครสมาชิกใหม่" };
     }
 
     try {
