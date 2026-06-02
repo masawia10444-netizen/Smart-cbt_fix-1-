@@ -46,11 +46,13 @@ export default async function middleware(req: NextRequest) {
 
   const token = req.cookies.get("NEXT_TOKEN")?.value;
   const isMTokenSession = req.cookies.get("MTOKEN_SESSION")?.value === "true";
+  const hasMTokenParam =
+    req.nextUrl.searchParams.has("mToken") ||
+    req.nextUrl.searchParams.has("MToken") ||
+    req.nextUrl.searchParams.has("mtoken");
   const isMTokenLogin =
-    isUnAuthenPage &&
     req.nextUrl.pathname.includes("/login") &&
-    req.nextUrl.searchParams.has("appId") &&
-    req.nextUrl.searchParams.has("mToken");
+    hasMTokenParam;
 
   if (isMTokenLogin) {
     const intlResponse = intlMiddleware(req);
