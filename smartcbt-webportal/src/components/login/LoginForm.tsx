@@ -19,8 +19,13 @@ const LoginForm = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const processedMTokenRef = useRef<string | null>(null);
+  const appId = searchParams.get("appId");
+  const mToken = searchParams.get("mToken") || searchParams.get("MToken") || searchParams.get("mtoken");
+  const appCode = searchParams.get("appCode") || "PORTAL";
+  const isMTokenRequest = Boolean(appId && mToken);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [mTokenError, setMTokenError] = useState<string | null>(null);
   const [isPendingMToken, startTransition] = useTransition();
 
   const {
@@ -37,9 +42,6 @@ const LoginForm = () => {
   });
 
   useEffect(() => {
-    const appId = searchParams.get("appId");
-    const mToken = searchParams.get("mToken");
-    const appCode = searchParams.get("appCode") || "PORTAL";
     const requestKey = appId && mToken ? `${appId}:${mToken}:${appCode}` : null;
 
     if (!requestKey || processedMTokenRef.current === requestKey) return;
@@ -47,6 +49,7 @@ const LoginForm = () => {
     processedMTokenRef.current = requestKey;
 
     setIsLoading(true);
+    setMTokenError(null);
     console.log("Starting mToken login with:", { appId, mToken });
 
     startTransition(() => {
@@ -60,6 +63,7 @@ const LoginForm = () => {
           
           if (result?.error) {
             console.error("mToken login error:", result.error);
+            setMTokenError(result.error);
             handleAPIError(result.error);
             setIsLoading(false);
             return;
@@ -75,16 +79,20 @@ const LoginForm = () => {
           }
 
           console.error("No redirectTo in result:", result);
-          handleAPIError("ไม่สามารถเข้าสู่ระบบด้วย mToken ได้: โปรดตรวจสอบ appId และ mToken ของคุณ");
+          const fallbackError = "Unable to sign in with mToken. Please close this window and try again.";
+          setMTokenError(fallbackError);
+          handleAPIError(fallbackError);
           setIsLoading(false);
         })
         .catch((error) => {
           console.error("mToken login catch error:", error);
-          handleAPIError("ไม่สามารถเข้าสู่ระบบด้วย mToken ได้: โปรดตรวจสอบ appId และ mToken ของคุณ");
+          const fallbackError = "Unable to sign in with mToken. Please close this window and try again.";
+          setMTokenError(fallbackError);
+          handleAPIError(fallbackError);
           setIsLoading(false);
         });
     });
-  }, [router, searchParams, t]);
+  }, [appCode, appId, mToken, router, t]);
 
   const emailRegex = /\S+@\S+\.\S+/;
   const phoneNumberRegex = /^\d{10}$/;
@@ -116,6 +124,17 @@ const LoginForm = () => {
       setIsLoading(false);
     }
   });
+
+  if (isMTokenRequest) {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center bg-white px-6">
+        <div className="flex max-w-xs flex-col items-center gap-4 text-center">
+          {!mTokenError && <LoadingSpinningIcon className="h-10 w-10 text-smart-cbt-green" />}
+          {mTokenError && <p className="text-sm text-smart-cbt-dark-grey">{mTokenError}</p>}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative mx-auto h-full">
