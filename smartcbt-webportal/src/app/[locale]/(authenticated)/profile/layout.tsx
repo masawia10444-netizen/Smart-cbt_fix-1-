@@ -6,21 +6,16 @@ import SideBar from "@/components/Sidebar";
 import { ArrowRightOnRectangleIcon, PhotoIcon } from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { logout } from "../../(index)/(unauthenticated)/login/actions";
+import { useSession } from "@/components/context-provider/AuthProvider";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   const t = useTranslations("common");
   const [isMobileOpened, setIsMobileOpened] = useState(false);
-  const [isMTokenSession, setIsMTokenSession] = useState(false);
-
-  useEffect(() => {
-    const cookies = document.cookie.split("; ");
-    const mtokenCookie = cookies.find((row) => row.startsWith("MTOKEN_SESSION="))?.split("=")[1];
-    setIsMTokenSession(mtokenCookie === "true");
-  }, []);
+  const { isMTokenSession } = useSession();
 
   const menuItems: React.ComponentProps<typeof SideBar>["menuItems"] = [
     {

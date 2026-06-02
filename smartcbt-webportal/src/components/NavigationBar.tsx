@@ -110,17 +110,8 @@ export default function NavigationBar({
   const pathname = usePathname();
   const [showMenus, setShowMenus] = useState<Menu[]>([]);
 
-  const { session } = useSession();
+  const { session, isMTokenSession } = useSession();
   const isOnboardingApm = useMemo(() => session && getIsOnBoarding(session?.user?.roles), [session]);
-
-  const [isMTokenSession, setIsMTokenSession] = useState(false);
-
-  useEffect(() => {
-    // Read the cookie on the client side without extra dependencies
-    const cookies = document.cookie.split("; ");
-    const mtokenCookie = cookies.find(row => row.startsWith("MTOKEN_SESSION="))?.split("=")[1];
-    setIsMTokenSession(mtokenCookie === "true");
-  }, []);
 
   useEffect(() => {
     let menus;

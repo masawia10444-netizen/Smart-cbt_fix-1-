@@ -13,6 +13,7 @@ import { getCmsMedia } from "@/utils/cms/api-helpers";
 import { Collection } from "@/utils/cms/cms-type";
 import { cn } from "@/utils/cn";
 import { getSession } from "@/utils/session";
+import useCookies from "@/hooks/useCookies";
 import { Metadata } from "next";
 import Script from "next/script";
 import { ToastContainer } from "react-toastify";
@@ -95,6 +96,7 @@ export default async function RootLayoutPage({ children, params }: { children: R
   }
 
   const session = await getSession();
+  const { isMTokenSession } = useCookies();
 
   return (
     <html lang={locale} className="h-full">
@@ -108,6 +110,7 @@ export default async function RootLayoutPage({ children, params }: { children: R
           termConditions={[]}
           communities={[]}
           session={session ?? null}
+          isMTokenSession={isMTokenSession}
         >
           {children}
           <ToastContainer />

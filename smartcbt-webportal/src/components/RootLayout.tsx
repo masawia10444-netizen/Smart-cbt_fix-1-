@@ -22,6 +22,7 @@ type Data = {
 
 export default function RootLayout({
   session,
+  isMTokenSession,
   messages,
   children,
 }: PropsWithChildren<{
@@ -33,6 +34,7 @@ export default function RootLayout({
   policies: Policies[];
   termConditions: TermConditions[];
   session: Session | null;
+  isMTokenSession?: boolean;
 }>) {
   const locale = useLocale();
   const router = useRouter();
@@ -90,7 +92,7 @@ export default function RootLayout({
   // }, [fetch])
 
   return (
-    <AuthProvider session={session}>
+    <AuthProvider session={session} isMTokenSession={isMTokenSession}>
       {/* <AppContext.Provider value={initValue}> */}
       <NextIntlClientProvider locale={locale} messages={messages}>
         {children}
