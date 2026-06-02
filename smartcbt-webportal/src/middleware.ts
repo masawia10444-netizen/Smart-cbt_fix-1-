@@ -37,14 +37,26 @@ export default async function middleware(req: NextRequest) {
   const loginUrl = new URL("/login", req.nextUrl);
   loginUrl.search = req.nextUrl.search;
   const response = NextResponse.redirect(loginUrl);
-  const removeTokens = async () => {
-    response.cookies.delete("NEXT_TOKEN");
-    response.cookies.delete("NEXT_REFRESH_TOKEN");
-    response.cookies.delete("APP_CODE");
+  const removeTokens = (targetResponse: NextResponse) => {
+    targetResponse.cookies.delete("NEXT_TOKEN");
+    targetResponse.cookies.delete("NEXT_REFRESH_TOKEN");
+    targetResponse.cookies.delete("APP_CODE");
+    targetResponse.cookies.delete("MTOKEN_SESSION");
   };
 
   const token = req.cookies.get("NEXT_TOKEN")?.value;
   const isMTokenSession = req.cookies.get("MTOKEN_SESSION")?.value === "true";
+  const isMTokenLogin =
+    isUnAuthenPage &&
+    req.nextUrl.pathname.includes("/login") &&
+    req.nextUrl.searchParams.has("appId") &&
+    req.nextUrl.searchParams.has("mToken");
+
+  if (isMTokenLogin) {
+    const intlResponse = intlMiddleware(req);
+    removeTokens(intlResponse);
+    return intlResponse;
+  }
 
   if (token && isUnAuthenPage) {
     return NextResponse.redirect(new URL("/main-menus", req.url));
@@ -89,7 +101,7 @@ export default async function middleware(req: NextRequest) {
         //   }
         // } else {
           console.log("Token Expired");
-          await removeTokens();
+          removeTokens(response);
           return response;
           // }
         }

@@ -113,6 +113,23 @@ export default async function RootLayoutPage({ children, params }: { children: R
           <ToastContainer />
         </RootLayout>
         <Script src="https://czp.dga.or.th/cportal/sdk/iu/v4/sdk.js" strategy="afterInteractive" />
+        <Script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js" strategy="afterInteractive" />
+        <Script id="smartcbt-vconsole" strategy="afterInteractive">
+          {`
+            (function initSmartCbtVConsole() {
+              if (typeof window === "undefined" || window.__SMARTCBT_VCONSOLE__) {
+                return;
+              }
+
+              if (typeof window.VConsole === "function") {
+                window.__SMARTCBT_VCONSOLE__ = new window.VConsole();
+                return;
+              }
+
+              window.setTimeout(initSmartCbtVConsole, 100);
+            })();
+          `}
+        </Script>
         <TagManager />
       </body>
     </html>
