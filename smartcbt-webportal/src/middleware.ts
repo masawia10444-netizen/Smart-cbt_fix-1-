@@ -50,9 +50,16 @@ export default async function middleware(req: NextRequest) {
     req.nextUrl.searchParams.has("mToken") ||
     req.nextUrl.searchParams.has("MToken") ||
     req.nextUrl.searchParams.has("mtoken");
-  const isMTokenLogin =
-    req.nextUrl.pathname.includes("/login") &&
-    hasMTokenParam;
+  const hasMTokenLoginParams = req.nextUrl.searchParams.has("appId") && hasMTokenParam;
+  const isMTokenLogin = req.nextUrl.pathname.includes("/login") && hasMTokenLoginParams;
+
+  if (!isMTokenLogin && hasMTokenLoginParams) {
+    const mTokenLoginUrl = new URL("/login", req.nextUrl);
+    mTokenLoginUrl.search = req.nextUrl.search;
+    const mTokenRedirectResponse = NextResponse.redirect(mTokenLoginUrl);
+    removeTokens(mTokenRedirectResponse);
+    return mTokenRedirectResponse;
+  }
 
   if (isMTokenLogin) {
     const intlResponse = intlMiddleware(req);
