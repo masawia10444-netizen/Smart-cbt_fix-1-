@@ -6,6 +6,7 @@ import { NextLink } from "../Link";
 
 type AvatarTravelMartProps = {
   handleLogout: () => void;
+  hideLogout?: boolean;
   setRoleTravelMartMenu?: (role: string) => void;
   rolesBusiness: {
     id: string;
@@ -19,7 +20,7 @@ type AvatarTravelMartProps = {
   }[];
 };
 
-const AvatarTravelMart = ({ handleLogout, rolesBusiness, setRoleTravelMartMenu }: AvatarTravelMartProps) => {
+const AvatarTravelMart = ({ handleLogout, hideLogout, rolesBusiness, setRoleTravelMartMenu }: AvatarTravelMartProps) => {
   const t = useTranslations("common");
 
   useEffect(() => {
@@ -96,12 +97,14 @@ const AvatarTravelMart = ({ handleLogout, rolesBusiness, setRoleTravelMartMenu }
               </NextLink>
             </div>
           </Menu.Item>
-          <Menu.Item>
-            <button className={`flex w-full items-center gap-2 py-4 text-sm`} onClick={handleLogout}>
-              <ArrowRightOnRectangleIcon className="h-6 w-6" />
-              {t("global.logout")}
-            </button>
-          </Menu.Item>
+          {!hideLogout && (
+            <Menu.Item>
+              <button className={`flex w-full items-center gap-2 py-4 text-sm`} onClick={handleLogout}>
+                <ArrowRightOnRectangleIcon className="h-6 w-6" />
+                {t("global.logout")}
+              </button>
+            </Menu.Item>
+          )}
         </div>
       </Menu.Items>
     </Transition>

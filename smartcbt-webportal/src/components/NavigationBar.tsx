@@ -40,9 +40,10 @@ type MenuItemProps = {
   session: Session | null;
   href?: string;
   setRoleTravelMartMenu?: (role: string) => void;
+  hideLogout?: boolean;
 };
 
-export const MenuItem = ({ type, title, session, href, setRoleTravelMartMenu }: MenuItemProps) => {
+export const MenuItem = ({ type, title, session, href, setRoleTravelMartMenu, hideLogout }: MenuItemProps) => {
   const pathname = usePathname();
   const isMapiActiveMenu = href?.includes("/mapi/developer") && pathname?.includes("/mapi/developer");
   switch (type) {
@@ -50,7 +51,14 @@ export const MenuItem = ({ type, title, session, href, setRoleTravelMartMenu }: 
       return <Languages />;
     case "profile":
       if (session)
-        return <Avatar name={session?.user?.first_name ?? ""} image="" setRoleTravelMartMenu={setRoleTravelMartMenu} />;
+        return (
+          <Avatar
+            name={session?.user?.first_name ?? ""}
+            image=""
+            setRoleTravelMartMenu={setRoleTravelMartMenu}
+            hideLogout={hideLogout}
+          />
+        );
       else return <></>;
     case "login":
       if (session) return <></>;
@@ -207,6 +215,7 @@ export default function NavigationBar({
                   session={session}
                   href={m.href}
                   setRoleTravelMartMenu={setRoleTravelMartMenu}
+                  hideLogout={isMTokenSession}
                 />
                 // <Fragment key={m.key}>
                 //   {renderMenus(m.key, t(m.title), session, m.href, setRoleTravelMartMenu)}
@@ -234,6 +243,7 @@ export default function NavigationBar({
         menus={isTravelMartPath() ? showMenus.concat(travelMartRegisterMenu) : showMenus}
         isMobileOpened={isMobileOpened}
         onToggle={onToggle}
+        hideLogout={isMTokenSession}
       />
     </Fragment>
   );

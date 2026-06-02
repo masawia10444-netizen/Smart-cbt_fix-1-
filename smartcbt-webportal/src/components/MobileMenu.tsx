@@ -10,9 +10,10 @@ interface MenusProps {
   isMobileOpened: boolean;
   session: any;
   menus: Menu[];
+  hideLogout?: boolean;
 }
 
-export const MobileMenu = ({ onToggle, isMobileOpened, menus, session }: MenusProps) => {
+export const MobileMenu = ({ onToggle, isMobileOpened, menus, session, hideLogout }: MenusProps) => {
   const t = useTranslations("common");
 
   return (
@@ -27,7 +28,14 @@ export const MobileMenu = ({ onToggle, isMobileOpened, menus, session }: MenusPr
                 </button>
                 <ul className="flex list-none flex-col items-start gap-6">
                   {menus?.map((m) => (
-                    <MenuItem key={m.key} type={m.key} title={t(m.title)} session={session} href={m.href} />
+                    <MenuItem
+                      key={m.key}
+                      type={m.key}
+                      title={t(m.title)}
+                      session={session}
+                      href={m.href}
+                      hideLogout={hideLogout}
+                    />
                   ))}
                 </ul>
               </div>

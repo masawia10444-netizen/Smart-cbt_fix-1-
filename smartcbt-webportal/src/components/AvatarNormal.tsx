@@ -9,9 +9,10 @@ type AvatarNormalProps = {
   image?: string;
   name: string;
   handleLogout: () => void;
+  hideLogout?: boolean;
 };
 
-const AvatarNormal = ({ name, image, handleLogout }: AvatarNormalProps) => {
+const AvatarNormal = ({ name, image, handleLogout, hideLogout }: AvatarNormalProps) => {
   const t = useTranslations("common");
 
   return (
@@ -57,12 +58,14 @@ const AvatarNormal = ({ name, image, handleLogout }: AvatarNormalProps) => {
               </NextLink>
             </div>
           </Menu.Item>
-          <Menu.Item>
-            <button className={`flex w-full items-center gap-2 py-2 text-sm`} onClick={handleLogout}>
-              <ArrowRightOnRectangleIcon className="h-6 w-6" />
-              {t("global.logout")}
-            </button>
-          </Menu.Item>
+          {!hideLogout && (
+            <Menu.Item>
+              <button className={`flex w-full items-center gap-2 py-2 text-sm`} onClick={handleLogout}>
+                <ArrowRightOnRectangleIcon className="h-6 w-6" />
+                {t("global.logout")}
+              </button>
+            </Menu.Item>
+          )}
         </div>
       </Menu.Items>
     </Transition>

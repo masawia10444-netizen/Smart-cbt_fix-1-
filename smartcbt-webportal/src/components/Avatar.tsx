@@ -12,10 +12,11 @@ type AvatarProps = {
   image?: string;
   setRoleTravelMartMenu?: (role: string) => void;
   name: string;
+  hideLogout?: boolean;
 };
 
 const Avatar = (props: AvatarProps) => {
-  const { name, image, setRoleTravelMartMenu } = props;
+  const { name, image, setRoleTravelMartMenu, hideLogout } = props;
 
   const t = useTranslations("common");
   const router = useRouter();
@@ -59,9 +60,10 @@ const Avatar = (props: AvatarProps) => {
           setRoleTravelMartMenu={setRoleTravelMartMenu}
           handleLogout={handleLogout}
           rolesBusiness={rolesBusiness}
+          hideLogout={hideLogout}
         />
       ) : (
-        <AvatarNormal handleLogout={handleLogout} {...props} />
+        <AvatarNormal handleLogout={handleLogout} {...props} hideLogout={hideLogout} />
       )}
     </Menu>
   );

@@ -6,7 +6,7 @@ import SideBar from "@/components/Sidebar";
 import { ArrowRightOnRectangleIcon, PhotoIcon } from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { logout } from "../../(index)/(unauthenticated)/login/actions";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -14,8 +14,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const t = useTranslations("common");
   const [isMobileOpened, setIsMobileOpened] = useState(false);
+  const [isMTokenSession, setIsMTokenSession] = useState(false);
 
-  const menuItems = [
+  useEffect(() => {
+    const cookies = document.cookie.split("; ");
+    const mtokenCookie = cookies.find((row) => row.startsWith("MTOKEN_SESSION="))?.split("=")[1];
+    setIsMTokenSession(mtokenCookie === "true");
+  }, []);
+
+  const menuItems: React.ComponentProps<typeof SideBar>["menuItems"] = [
     {
       key: "profile",
       href: `/profile/user`,
@@ -46,13 +53,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     //   label: t("profile.menus.removeAccount"),
     //   icon: <DeleteIcon2 />,
     // },
-    {
+  ];
+
+  if (!isMTokenSession) {
+    menuItems.push({
       key: "logout",
       label: t("profile.menus.logout"),
       icon: <ArrowRightOnRectangleIcon className="h-6 w-6" />,
       onClick: () => handleLogout(),
-    },
-  ];
+    });
+  }
 
   const handleLogout = async () => {
     await logout();
